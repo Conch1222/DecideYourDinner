@@ -36,7 +36,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		noError, err := validateLogin(user, password)
 		if !noError {
 			fmt.Println(err)
-			fmt.Fprintf(w, "login fail: %s", err)
+			fmt.Fprintf(w, "Login fail: %s", err)
 			return
 		}
 		fmt.Println("login success!")
@@ -63,5 +63,11 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if r.Method == "POST" {
 		fmt.Println("user input: ", r.Form)
+		noError, err := validateMainPageInput(r)
+		if !noError {
+			fmt.Println(err)
+			fmt.Fprintf(w, "Invalid input: %s", err)
+			return
+		}
 	}
 }
