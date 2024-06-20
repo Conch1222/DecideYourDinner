@@ -14,16 +14,22 @@ const (
 	DATABASE = "web"
 )
 
+var DB *sql.DB
+
 func connectDB() *sql.DB {
-	conn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", USERNAME, PASSWORD, NETWORK, SERVER, PORT, DATABASE)
-	db, err := sql.Open("mysql", conn)
-	if err != nil {
-		fmt.Println("Open Mysql error: ", err)
-		return nil
+	if DB == nil {
+		fmt.Println("Connecting to " + DATABASE)
+		conn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", USERNAME, PASSWORD, NETWORK, SERVER, PORT, DATABASE)
+		db, err := sql.Open("mysql", conn)
+		if err != nil {
+			fmt.Println("Open Mysql error: ", err)
+			return nil
+		}
+		if err := db.Ping(); err != nil {
+			fmt.Println("database connect error: ", err.Error())
+			return nil
+		}
+		DB = db
 	}
-	if err := db.Ping(); err != nil {
-		fmt.Println("database connect error: ", err.Error())
-		return nil
-	}
-	return db
+	return DB
 }

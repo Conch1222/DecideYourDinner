@@ -45,7 +45,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("method:", r.Method)
+	fmt.Println("method: ", r.Method)
 	if err := r.ParseForm(); err != nil {
 		return
 	}
@@ -63,11 +63,27 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if r.Method == "POST" {
 		fmt.Println("user input: ", r.Form)
-		noError, err := validateMainPageInput(r)
+		noError, err, optionMap := validateMainPageInput(r)
 		if !noError {
 			fmt.Println(err)
 			fmt.Fprintf(w, "Invalid input: %s", err)
 			return
 		}
+
+		fmt.Println(optionMap)
+		fmt.Fprintln(w, "success!")
+
+		client := getClient()
+		loc, err := client.getUserLocation(w)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Fprintf(w, err.Error())
+			return
+		}
+		//http.Redirect(w, r, "/mainPage?username="+userName, http.StatusSeeOther)
 	}
+}
+
+func result(w http.ResponseWriter, r *http.Request) {
+
 }
