@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -46,7 +47,7 @@ func initClient() (*GMapClient, error) {
 }
 
 func ReadApiKey() (string, error) {
-	file, err := os.Open("File/key.txt")
+	file, err := os.Open("File/Key.txt")
 	if err != nil {
 		return "", err
 	}
@@ -60,6 +61,7 @@ func ReadApiKey() (string, error) {
 }
 
 func (client *GMapClient) getUserLocation(w http.ResponseWriter) (File.GeoLocation, error) {
+	// POST
 	dst := "https://www.googleapis.com/geolocation/v1/geolocate?key=" + client.ApiKey
 	form := url.Values{}
 
@@ -77,4 +79,33 @@ func (client *GMapClient) getUserLocation(w http.ResponseWriter) (File.GeoLocati
 	} else {
 		return resultLocation, errors.New(Error.CannotGetUserLocation)
 	}
+}
+
+func (client *GMapClient) getUserNearBy(w http.ResponseWriter, loc File.GeoLocation, option string) {
+	// GET
+	dst := "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+
+	req, err := http.NewRequest("GET", dst, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	q := req.URL.Query()
+	q.Add("location", convertGeoLocationToString(loc))
+	q.Add("language", "zh-TW")
+	q.Add("keyword", option)
+	q.Add("radius", strconv.Itoa(100))
+	q.Add("key", client.ApiKey)
+	req.URL.RawQuery = q.Encode()
+	fmt.Println(req.URL.String())
+
+	res, err := client.Client.Do(req)
+	data, _ := io.ReadAll(res.Body)
+	fmt.Fprintln(w, string(data))
+}
+
+func convertGeoLocationToString(location File.GeoLocation) string {
+	lat := strconv.FormatFloat(location.Location.Latitude, 'f', -1, 64)
+	lng := strconv.FormatFloat(location.Location.Longitude, 'f', -1, 64)
+	return lat + "," + lng
 }

@@ -80,6 +80,11 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, err.Error())
 			return
 		}
+
+		for k, _ := range optionMap {
+			client.getUserNearBy(w, loc, k)
+		}
+
 		//http.Redirect(w, r, "/mainPage?username="+userName, http.StatusSeeOther)
 	}
 }
