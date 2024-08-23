@@ -13,5 +13,8 @@ var (
 
 	InvalidApiKey = "unable to read API key"
 
-	CannotGetUserLocation = "unable to get user location"
+	OutputError_CannotGetUserLocation = "unable to get user location"
+	OutputError_CannotGetNearBy       = "unable to get nearBy"
+	OutputError_AllZeroResults        = "the result is empty"
+	OutputError_RequestError          = "system encounters request error"
 )

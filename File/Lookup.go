@@ -1,0 +1,8 @@
+package File
+
+var (
+	STATUS_OK           = "OK"
+	STATUS_ZERO_RESULTS = "ZERO_RESULTS"
+
+	BUSINESS_STATUS_OPERATIONAL = "OPERATIONAL"
+)

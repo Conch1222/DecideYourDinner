@@ -6,19 +6,20 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-func validateLogin(user *File.User, passwd string) (bool, error) {
+func validateLogin(user *File.User, passwd string) error {
 
 	if user == nil {
-		return false, errors.New(Error.InvalidLogin_UserDoesNotExist)
+		return errors.New(Error.InvalidLogin_UserDoesNotExist)
 	}
 
 	if len(user.UserName) == 0 || len(passwd) == 0 {
-		return false, errors.New(Error.InvalidLogin_WrongUserNameOrPassword)
+		return errors.New(Error.InvalidLogin_WrongUserNameOrPassword)
 	}
 
 	hash := sha256.New()
@@ -26,36 +27,38 @@ func validateLogin(user *File.User, passwd string) (bool, error) {
 	hashResult := hex.EncodeToString(hash.Sum(nil))
 	hashResult = strings.ToUpper(hashResult)
 	if user.PasswordHash != hashResult {
-		return false, errors.New(Error.InvalidLogin_WrongPassword)
+		return errors.New(Error.InvalidLogin_WrongPassword)
 	}
 
-	return true, nil
+	return nil
 }
 
-func validateMainPageInput(r *http.Request) (bool, error, map[string]int) {
-	if r.Form["option1"][0] == "" || r.Form["option2"][0] == "" || r.Form["option3"][0] == "" {
-		return false, errors.New(Error.InvalidInput_RequiredOption), nil
+func validateMainPageInput(r *http.Request) (map[string]float64, error) {
+	if strings.TrimSpace(r.Form["option1"][0]) == "" || strings.TrimSpace(r.Form["option2"][0]) == "" ||
+		strings.TrimSpace(r.Form["option3"][0]) == "" {
+		return nil, errors.New(Error.InvalidInput_RequiredOption)
 	}
 
-	if r.Form["option1_weight"][0] == "" || r.Form["option2_weight"][0] == "" || r.Form["option3_weight"][0] == "" {
-		return false, errors.New(Error.InvalidInput_RequiredOptionWeight), nil
+	if strings.TrimSpace(r.Form["option1_weight"][0]) == "" || strings.TrimSpace(r.Form["option2_weight"][0]) == "" ||
+		strings.TrimSpace(r.Form["option3_weight"][0]) == "" {
+		return nil, errors.New(Error.InvalidInput_RequiredOptionWeight)
 	}
 
 	weightMap, err := transformWeightToSum(r)
 	if err != nil {
-		return false, err, nil
+		return nil, err
 	}
 
 	weightSum := findSumOfWeight(weightMap)
 	if weightSum <= 0 || weightSum > 100 {
-		return false, errors.New(Error.InvalidInput_InvalidSumOfWeight), nil
+		return nil, errors.New(Error.InvalidInput_InvalidSumOfWeight)
 	}
 
-	return true, nil, weightMap
+	return weightMap, nil
 }
 
-func transformWeightToSum(r *http.Request) (map[string]int, error) {
-	resultArr := make(map[string]int)
+func transformWeightToSum(r *http.Request) (map[string]float64, error) {
+	resultArr := make(map[string]float64)
 
 	for i := 1; i <= 5; i++ {
 		optionNum := "option" + strconv.Itoa(i)
@@ -79,8 +82,8 @@ func transformWeightToSum(r *http.Request) (map[string]int, error) {
 	return resultArr, nil
 }
 
-func transFormAndCheckInvalidNumber(weight string) (int, error) {
-	result, err := strconv.Atoi(weight)
+func transFormAndCheckInvalidNumber(weight string) (float64, error) {
+	result, err := strconv.ParseFloat(weight, 64)
 	if err != nil {
 		return -1, err
 	}
@@ -92,13 +95,63 @@ func transFormAndCheckInvalidNumber(weight string) (int, error) {
 }
 
 func isBothOptionAndWeightNotEmpty(option string, weight string) bool {
-	return option != "" && weight != ""
+	return strings.TrimSpace(option) != "" && strings.TrimSpace(weight) != ""
 }
 
-func findSumOfWeight(weights map[string]int) int {
-	sum := 0
+func findSumOfWeight(weights map[string]float64) float64 {
+	var sum float64 = 0
 	for _, weight := range weights {
 		sum += weight
 	}
 	return sum
+}
+
+func validateResultStatus(resultsNearBy []*File.NearBy) error {
+	var allZeroResult = true
+	for _, result := range resultsNearBy {
+		if result.Status == File.STATUS_OK {
+			allZeroResult = false
+		}
+
+		if result.Status != File.STATUS_OK && result.Status != File.STATUS_ZERO_RESULTS {
+			return errors.New(Error.OutputError_RequestError)
+		}
+	}
+
+	if allZeroResult {
+		return errors.New(Error.OutputError_AllZeroResults)
+	}
+
+	return nil
+}
+
+func eliminateNotOpenResult(resultsNearBy []*File.NearBy) {
+	for _, result := range resultsNearBy {
+		stores := result.NearByResults
+		resultStore := make([]File.NearByResult, 0)
+		for i := 0; i < len(stores); i++ {
+			if (stores[i].BusinessStatus == File.BUSINESS_STATUS_OPERATIONAL) && stores[i].OpeningHours.OpenNow == true {
+				resultStore = append(resultStore, stores[i])
+			} else {
+				fmt.Println(stores[i])
+			}
+		}
+		result.NearByResults = resultStore
+	}
+}
+
+func rankAllResults(resultsNearBy []*File.NearBy, optionWeightMap *map[string]float64) []File.NearByResult {
+	ret := make([]File.NearByResult, 0)
+
+	for _, result := range resultsNearBy {
+		for _, resultStore := range result.NearByResults {
+			ret = append(ret, resultStore)
+		}
+	}
+
+	return ret
+}
+
+func computeRankingScore(resultStore *File.NearByResult, weight float64) float64 {
+
 }

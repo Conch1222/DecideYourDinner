@@ -1,11 +1,15 @@
 package main
 
 import (
+	"GoWeb/File"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 )
+
+var resultsNearByMap []*File.NearBy
+var optionWeightMap *map[string]float64
 
 func hello(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
@@ -33,8 +37,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 		password := r.Form["password"][0]
 		user := getUserByUserName(db, userName)
 
-		noError, err := validateLogin(user, password)
-		if !noError {
+		err := validateLogin(user, password)
+		if err != nil {
 			fmt.Println(err)
 			fmt.Fprintf(w, "Login fail: %s", err)
 			return
@@ -63,15 +67,14 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if r.Method == "POST" {
 		fmt.Println("user input: ", r.Form)
-		noError, err, optionMap := validateMainPageInput(r)
-		if !noError {
+		optionMap, err := validateMainPageInput(r)
+		if err != nil {
 			fmt.Println(err)
 			fmt.Fprintf(w, "Invalid input: %s", err)
 			return
 		}
 
 		fmt.Println(optionMap)
-		fmt.Fprintln(w, "success!")
 
 		client := getClient()
 		loc, err := client.getUserLocation(w)
@@ -81,14 +84,32 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		resultsNearBy := make([]*File.NearBy, 0)
 		for k, _ := range optionMap {
-			client.getUserNearBy(w, loc, k)
+			resultNearBy, err := client.getUserNearBy(w, *loc, k)
+			if err != nil {
+				fmt.Println(err)
+				fmt.Fprintf(w, err.Error())
+				return
+			}
+			resultsNearBy = append(resultsNearBy, resultNearBy)
 		}
-
-		//http.Redirect(w, r, "/mainPage?username="+userName, http.StatusSeeOther)
+		resultsNearByMap = resultsNearBy
+		optionWeightMap = &optionMap
+		http.Redirect(w, r, "/mainPage/result", http.StatusSeeOther)
 	}
 }
 
-func result(w http.ResponseWriter, r *http.Request) {
+func resultPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		err := validateResultStatus(resultsNearByMap)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Fprintf(w, err.Error())
+			return
+		}
 
+		eliminateNotOpenResult(resultsNearByMap)
+		fmt.Fprintln(w, "success!")
+	}
 }

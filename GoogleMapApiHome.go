@@ -60,7 +60,7 @@ func ReadApiKey() (string, error) {
 	return "", errors.New(Error.InvalidApiKey)
 }
 
-func (client *GMapClient) getUserLocation(w http.ResponseWriter) (File.GeoLocation, error) {
+func (client *GMapClient) getUserLocation(w http.ResponseWriter) (*File.GeoLocation, error) {
 	// POST
 	dst := "https://www.googleapis.com/geolocation/v1/geolocate?key=" + client.ApiKey
 	form := url.Values{}
@@ -71,17 +71,16 @@ func (client *GMapClient) getUserLocation(w http.ResponseWriter) (File.GeoLocati
 	}
 	res, err := client.Client.Do(req)
 	data, _ := io.ReadAll(res.Body)
-	fmt.Fprintln(w, string(data))
 
 	var resultLocation File.GeoLocation
 	if err := json.Unmarshal(data, &resultLocation); err == nil {
-		return resultLocation, nil
+		return &resultLocation, nil
 	} else {
-		return resultLocation, errors.New(Error.CannotGetUserLocation)
+		return nil, errors.New(Error.OutputError_CannotGetUserLocation)
 	}
 }
 
-func (client *GMapClient) getUserNearBy(w http.ResponseWriter, loc File.GeoLocation, option string) {
+func (client *GMapClient) getUserNearBy(w http.ResponseWriter, loc File.GeoLocation, option string) (*File.NearBy, error) {
 	// GET
 	dst := "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
 
@@ -94,14 +93,20 @@ func (client *GMapClient) getUserNearBy(w http.ResponseWriter, loc File.GeoLocat
 	q.Add("location", convertGeoLocationToString(loc))
 	q.Add("language", "zh-TW")
 	q.Add("keyword", option)
-	q.Add("radius", strconv.Itoa(100))
+	q.Add("radius", strconv.Itoa(int(loc.Accuracy+100)))
 	q.Add("key", client.ApiKey)
 	req.URL.RawQuery = q.Encode()
 	fmt.Println(req.URL.String())
 
 	res, err := client.Client.Do(req)
 	data, _ := io.ReadAll(res.Body)
-	fmt.Fprintln(w, string(data))
+
+	var resultNearBy File.NearBy
+	if err := json.Unmarshal(data, &resultNearBy); err == nil {
+		return &resultNearBy, nil
+	} else {
+		return nil, errors.New(Error.OutputError_CannotGetNearBy)
+	}
 }
 
 func convertGeoLocationToString(location File.GeoLocation) string {
