@@ -6,10 +6,12 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 var resultsNearByMap []*File.NearBy
-var optionWeightMap *map[string]float64
+var rankStoresList []File.NearByResult
+var storeCount = 0
 
 func hello(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
@@ -19,26 +21,51 @@ func hello(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello, %s!", r.Form.Get("name"))
 }
 
+func signUp(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		return
+	}
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("File/SignUp.html")
+		log.Println(t.Execute(w, nil))
+	} else if r.Method == "POST" {
+		userName := r.Form["username"][0]
+		password := r.Form["password"][0]
+		confirmPassword := r.Form["confirmPassword"][0]
+
+		if err := validateSignUp(userName, password, confirmPassword); err != nil {
+			fmt.Println(err)
+			fmt.Fprintf(w, "Sign up fail: %s", err)
+			return
+		}
+
+		db := connectDB()
+		_, err := saveUserInfo(db, userName, password)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Fprintf(w, "Sign up fail: %s", err)
+			return
+		}
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
+}
+
 func login(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
 	if err := r.ParseForm(); err != nil {
 		return
 	}
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("File/Login.gtpl")
+		t, _ := template.ParseFiles("File/Login.html")
 		log.Println(t.Execute(w, nil))
 	} else if r.Method == "POST" {
-
-		fmt.Println("username:", r.Form["username"])
-		fmt.Println("password:", r.Form["password"])
 
 		db := connectDB()
 		userName := r.Form["username"][0]
 		password := r.Form["password"][0]
 		user := getUserByUserName(db, userName)
 
-		err := validateLogin(user, password)
-		if err != nil {
+		if err := validateLogin(user, password); err != nil {
 			fmt.Println(err)
 			fmt.Fprintf(w, "Login fail: %s", err)
 			return
@@ -58,6 +85,7 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		type data struct {
 			UserName string
 		}
+
 		t := template.Must(template.ParseFiles("File/MainPage.html"))
 		if err := t.Execute(w, data{
 			UserName: r.URL.Query().Get("username"),
@@ -85,31 +113,56 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resultsNearBy := make([]*File.NearBy, 0)
-		for k, _ := range optionMap {
+		for k, v := range optionMap {
 			resultNearBy, err := client.getUserNearBy(w, *loc, k)
 			if err != nil {
 				fmt.Println(err)
 				fmt.Fprintf(w, err.Error())
 				return
 			}
+			resultNearBy.Option = k
+			resultNearBy.Weight = v
 			resultsNearBy = append(resultsNearBy, resultNearBy)
 		}
 		resultsNearByMap = resultsNearBy
-		optionWeightMap = &optionMap
-		http.Redirect(w, r, "/mainPage/result", http.StatusSeeOther)
-	}
-}
 
-func resultPage(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		err := validateResultStatus(resultsNearByMap)
-		if err != nil {
+		if err := validateResultStatus(resultsNearByMap); err != nil {
 			fmt.Println(err)
 			fmt.Fprintf(w, err.Error())
 			return
 		}
 
 		eliminateNotOpenResult(resultsNearByMap)
-		fmt.Fprintln(w, "success!")
+		rankStoresList = rankAllResults(resultsNearByMap)
+		storeCount = 0
+
+		http.Redirect(w, r, "/mainPage/result", http.StatusSeeOther)
+	}
+}
+
+func resultPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" && storeCount < len(rankStoresList) {
+		store := rankStoresList[storeCount]
+
+		type data struct {
+			StoreName    string
+			StoreAddress string
+			StoreRating  string
+			StoreMapLink string
+		}
+
+		t := template.Must(template.ParseFiles("File/ResultPage.html"))
+		if err := t.Execute(w, data{
+			StoreName:    store.Name,
+			StoreAddress: convertAddress(store),
+			StoreRating:  strconv.FormatFloat(store.Rating, 'f', -1, 64),
+			StoreMapLink: File.Url_GoogleSearch + store.Name + File.Url_GoogleSearch_PlaceIdParm + store.PlaceId,
+		}); err != nil {
+			fmt.Println(err)
+			return
+		}
+		storeCount++
+	} else {
+		fmt.Fprintf(w, "Recommendation has ended!")
 	}
 }

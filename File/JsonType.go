@@ -13,6 +13,9 @@ type GeoLocation struct {
 type NearBy struct {
 	NearByResults []NearByResult `json:"results"`
 	Status        string         `json:"status"`
+
+	Option string
+	Weight float64
 }
 
 type NearByResult struct {
@@ -22,13 +25,13 @@ type NearByResult struct {
 	PriceLevel      int          `json:"price_level"`
 	Rating          float64      `json:"rating"`
 	Reference       string       `json:"reference"`
-	UserRatingTotal int          `json:"user_rating_total"`
+	UserRatingTotal int          `json:"user_ratings_total"`
 	Vicinity        string       `json:"vicinity"`
 	Geometry        GeoLocation  `json:"geometry"`
 	PlusCode        PlusCode     `json:"plus_code"`
 	OpeningHours    OpeningHours `json:"opening_hours"`
 
-	rankingScore float64
+	RankingScore float64
 }
 
 type Geometry struct {

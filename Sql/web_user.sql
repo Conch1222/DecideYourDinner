@@ -1,13 +1,13 @@
 create database web;
 use web;
 create table web_user(
-	user_id integer not null,
-	last_name varchar(255) not null,
-    first_name varchar(255) not null,
-    user_name varchar(255)  not null,
-    password_hash varchar(70) not null,
-    create_time datetime,
-    primary key(user_id)
+     user_id integer AUTO_INCREMENT not null,
+     last_name varchar(255),
+     first_name varchar(255),
+     user_name varchar(255)  not null,
+     password_hash varchar(70) not null,
+     create_time datetime,
+     primary key(user_id)
 );
 
 select * from web_user;

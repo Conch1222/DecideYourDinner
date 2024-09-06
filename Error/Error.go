@@ -7,6 +7,12 @@ var (
 	InvalidInput_InvalidSumOfWeight   = "the sum of the weights must be greater than 0 and less than 100"
 	InvalidInput_DuplicateOption      = "options cannot be repeated"
 
+	InvalidSignUp_UserNameCannotBeEmpty           = "username cannot be empty"
+	InvalidSignUp_UserNameCannotContainSpaces     = "username cannot contain spaces"
+	InvalidSignUp_UserNameAlreadyTaken            = "username is already taken"
+	InvalidSignUp_PasswordTooShort                = "password is too short, the length must be above 8"
+	InvalidSignUp_PasswordDiffFromConfirmPassword = "password is different from confirmation password"
+
 	InvalidLogin_UserDoesNotExist        = "user does not exist"
 	InvalidLogin_WrongUserNameOrPassword = "username or password is wrong"
 	InvalidLogin_WrongPassword           = "password is wrong"

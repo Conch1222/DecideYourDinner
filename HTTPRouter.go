@@ -7,6 +7,7 @@ import (
 
 func setHTTPRouter() {
 	http.HandleFunc("/", hello)
+	http.HandleFunc("/signUp", signUp)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/mainPage", mainPage)
 	http.HandleFunc("/mainPage/result", resultPage)
