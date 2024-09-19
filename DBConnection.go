@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"sync"
 )
 
 const (
@@ -14,10 +15,23 @@ const (
 	DATABASE = "web"
 )
 
-var DB *sql.DB
+type DBConnection struct {
+	db *sql.DB
+}
 
-func connectDB() *sql.DB {
-	if DB == nil {
+var DBConn *DBConnection
+var onceDBConn sync.Once
+
+func connectDB() *DBConnection {
+	onceDBConn.Do(func() {
+		db := initDB()
+		DBConn = db
+	})
+	return DBConn
+}
+
+func initDB() *DBConnection {
+	if DBConn == nil {
 		fmt.Println("Connecting to " + DATABASE)
 		conn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", USERNAME, PASSWORD, NETWORK, SERVER, PORT, DATABASE)
 		db, err := sql.Open("mysql", conn)
@@ -29,7 +43,8 @@ func connectDB() *sql.DB {
 			fmt.Println("database connect error: ", err.Error())
 			return nil
 		}
-		DB = db
+
+		return &DBConnection{db: db}
 	}
-	return DB
+	return DBConn
 }

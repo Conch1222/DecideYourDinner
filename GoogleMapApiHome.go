@@ -2,15 +2,13 @@ package main
 
 import (
 	"GoWeb/Error"
-	"GoWeb/File"
-	"bufio"
+	"GoWeb/Type"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,45 +20,38 @@ type GMapClient struct {
 	ApiKey string
 }
 
-var Client *GMapClient
-var once sync.Once
+var GClient *GMapClient
+var onceGClient sync.Once
 
 func getClient() *GMapClient {
 	// singleton
-	once.Do(func() {
+	onceGClient.Do(func() {
+		fmt.Println("once Init Cli")
 		client, _ := initClient()
-		Client = client
+		GClient = client
 	})
-	return Client
+	return GClient
 }
 
 func initClient() (*GMapClient, error) {
-	key, err := ReadApiKey()
+	key, err := ReadKey("File/Key.txt", Error.InvalidApiKey)
 	if err != nil {
+		fmt.Println("panic")
 		panic(err)
 	}
 
-	Client = new(GMapClient)
-	Client.Client = &http.Client{Timeout: time.Second * 10}
-	Client.ApiKey = key
-	return Client, nil
+	if GClient == nil {
+		fmt.Println("init client")
+		GClient = new(GMapClient)
+		GClient.Client = &http.Client{Timeout: time.Second * 10}
+		GClient.ApiKey = key
+		return GClient, nil
+	}
+
+	return GClient, nil
 }
 
-func ReadApiKey() (string, error) {
-	file, err := os.Open("File/Key.txt")
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	if scanner.Scan() {
-		return scanner.Text(), nil
-	}
-	return "", errors.New(Error.InvalidApiKey)
-}
-
-func (client *GMapClient) getUserLocation(w http.ResponseWriter) (*File.GeoLocation, error) {
+func (client *GMapClient) getUserLocation(w http.ResponseWriter) (*Type.GeoLocation, error) {
 	// POST
 	dst := "https://www.googleapis.com/geolocation/v1/geolocate?key=" + client.ApiKey
 	form := url.Values{}
@@ -72,7 +63,7 @@ func (client *GMapClient) getUserLocation(w http.ResponseWriter) (*File.GeoLocat
 	res, err := client.Client.Do(req)
 	data, _ := io.ReadAll(res.Body)
 
-	var resultLocation File.GeoLocation
+	var resultLocation Type.GeoLocation
 	if err := json.Unmarshal(data, &resultLocation); err == nil {
 		return &resultLocation, nil
 	} else {
@@ -80,7 +71,7 @@ func (client *GMapClient) getUserLocation(w http.ResponseWriter) (*File.GeoLocat
 	}
 }
 
-func (client *GMapClient) getUserNearBy(w http.ResponseWriter, loc File.GeoLocation, option string) (*File.NearBy, error) {
+func (client *GMapClient) getUserNearBy(w http.ResponseWriter, loc Type.GeoLocation, option string) (*Type.NearBy, error) {
 	// GET
 	dst := "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
 
@@ -101,7 +92,7 @@ func (client *GMapClient) getUserNearBy(w http.ResponseWriter, loc File.GeoLocat
 	res, err := client.Client.Do(req)
 	data, _ := io.ReadAll(res.Body)
 
-	var resultNearBy File.NearBy
+	var resultNearBy Type.NearBy
 	if err := json.Unmarshal(data, &resultNearBy); err == nil {
 		return &resultNearBy, nil
 	} else {
@@ -109,7 +100,7 @@ func (client *GMapClient) getUserNearBy(w http.ResponseWriter, loc File.GeoLocat
 	}
 }
 
-func convertGeoLocationToString(location File.GeoLocation) string {
+func convertGeoLocationToString(location Type.GeoLocation) string {
 	lat := strconv.FormatFloat(location.Location.Latitude, 'f', -1, 64)
 	lng := strconv.FormatFloat(location.Location.Longitude, 'f', -1, 64)
 	return lat + "," + lng

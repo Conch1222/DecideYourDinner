@@ -1,8 +1,10 @@
-package File
+package Type
 
 var (
 	STATUS_OK           = "OK"
 	STATUS_ZERO_RESULTS = "ZERO_RESULTS"
 
 	BUSINESS_STATUS_OPERATIONAL = "OPERATIONAL"
+
+	SESSION_NAME = "Session"
 )

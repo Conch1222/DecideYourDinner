@@ -17,7 +17,10 @@ var (
 	InvalidLogin_WrongUserNameOrPassword = "username or password is wrong"
 	InvalidLogin_WrongPassword           = "password is wrong"
 
-	InvalidApiKey = "unable to read API key"
+	InvalidApiKey         = "unable to read API key"
+	InvalidSessionKey     = "unable to read session key"
+	InvalidUser           = "user is unauthorized"
+	HistoricalRecordEmpty = "historical records are empty"
 
 	OutputError_CannotGetUserLocation = "unable to get user location"
 	OutputError_CannotGetNearBy       = "unable to get nearBy"

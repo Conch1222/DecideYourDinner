@@ -1,4 +1,4 @@
-package File
+package Type
 
 type User struct {
 	ID           int64

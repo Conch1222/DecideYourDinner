@@ -1,4 +1,4 @@
-package File
+package Type
 
 var (
 	Default_Price      = 2.0

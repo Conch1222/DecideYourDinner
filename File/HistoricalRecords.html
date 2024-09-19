@@ -1,0 +1,65 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .record-container {
+            margin: 20px auto;
+            width: 80%;
+            border-collapse: collapse;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #EAC100;
+        }
+        .small-text {
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1 align="center"> <font color="green"> Historical Records </font> </h1>
+<form action="/mainPage" method="get">
+    <p align="center">
+        <input type="submit" value="Back to Main Page">
+    </p>
+</form>
+
+<div class="record-container">
+    <table>
+        <thead>
+        <tr>
+            <th>Store Name</th>
+            <th>Store Address</th>
+            <th>Store Rating</th>
+            <th>Store Map Link</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .}}
+        <tr>
+            <td>{{.StoreName}}</td>
+            <td>{{.StoreAddress}}</td>
+            <td>{{.StoreRating}}</td>
+            <td class="small-text">{{.StoreMapLink}}</td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

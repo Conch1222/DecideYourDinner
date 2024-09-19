@@ -2,13 +2,15 @@ package main
 
 import (
 	"GoWeb/Error"
-	"GoWeb/File"
+	"GoWeb/Type"
+	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,15 +33,15 @@ func validateSignUp(userName string, password string, confirmPassword string) er
 		return errors.New(Error.InvalidSignUp_PasswordDiffFromConfirmPassword)
 	}
 
-	db := connectDB()
-	if isUserNameDuplicated(db, userName) {
+	DBConn := connectDB()
+	if DBConn.isUserNameDuplicated(userName) {
 		return errors.New(Error.InvalidSignUp_UserNameAlreadyTaken)
 	}
 
 	return nil
 }
 
-func validateLogin(user *File.User, passwd string) error {
+func validateLogin(user *Type.User, passwd string) error {
 
 	if user == nil {
 		return errors.New(Error.InvalidLogin_UserDoesNotExist)
@@ -133,14 +135,14 @@ func findSumOfWeight(weights map[string]float64) float64 {
 	return sum
 }
 
-func validateResultStatus(resultsNearBy []*File.NearBy) error {
+func validateResultStatus(resultsNearBy []*Type.NearBy) error {
 	var allZeroResult = true
 	for _, result := range resultsNearBy {
-		if result.Status == File.STATUS_OK {
+		if result.Status == Type.STATUS_OK {
 			allZeroResult = false
 		}
 
-		if result.Status != File.STATUS_OK && result.Status != File.STATUS_ZERO_RESULTS {
+		if result.Status != Type.STATUS_OK && result.Status != Type.STATUS_ZERO_RESULTS {
 			return errors.New(Error.OutputError_RequestError)
 		}
 	}
@@ -152,12 +154,12 @@ func validateResultStatus(resultsNearBy []*File.NearBy) error {
 	return nil
 }
 
-func eliminateNotOpenResult(resultsNearBy []*File.NearBy) {
+func eliminateNotOpenResult(resultsNearBy []*Type.NearBy) {
 	for _, result := range resultsNearBy {
 		stores := result.NearByResults
-		resultStore := make([]File.NearByResult, 0)
+		resultStore := make([]Type.NearByResult, 0)
 		for i := 0; i < len(stores); i++ {
-			if (stores[i].BusinessStatus == File.BUSINESS_STATUS_OPERATIONAL) && stores[i].OpeningHours.OpenNow == true {
+			if (stores[i].BusinessStatus == Type.BUSINESS_STATUS_OPERATIONAL) && stores[i].OpeningHours.OpenNow == true {
 				resultStore = append(resultStore, stores[i])
 			} else {
 				fmt.Println("eliminate not open")
@@ -167,8 +169,8 @@ func eliminateNotOpenResult(resultsNearBy []*File.NearBy) {
 	}
 }
 
-func rankAllResults(resultsNearBy []*File.NearBy) []File.NearByResult {
-	ret := make([]File.NearByResult, 0)
+func rankAllResults(resultsNearBy []*Type.NearBy) []Type.NearByResult {
+	ret := make([]Type.NearByResult, 0)
 
 	for _, result := range resultsNearBy {
 		for _, resultStore := range result.NearByResults {
@@ -181,19 +183,19 @@ func rankAllResults(resultsNearBy []*File.NearBy) []File.NearByResult {
 	return ret
 }
 
-func computeRankingScore(resultStore *File.NearByResult, weight float64) float64 {
-	priceScore := File.Default_Price
+func computeRankingScore(resultStore *Type.NearByResult, weight float64) float64 {
+	priceScore := Type.Default_Price
 	if resultStore.PriceLevel != 0 {
 		priceScore = float64(4 - resultStore.PriceLevel)
 	}
 
-	ratingScore := File.Default_Rating
+	ratingScore := Type.Default_Rating
 	if resultStore.Rating > 1e-9 {
 		ratingScore = resultStore.Rating
 	}
 
 	// formula: log(ratingScore) / 5.0
-	userRatingScore := File.Default_UserRating
+	userRatingScore := Type.Default_UserRating
 	if resultStore.UserRatingTotal != 0 {
 		userRatingScore = float64(resultStore.UserRatingTotal)
 	}
@@ -201,11 +203,11 @@ func computeRankingScore(resultStore *File.NearByResult, weight float64) float64
 
 	normalizedWeight := weight / 100.0
 
-	return (File.Weight_Price * priceScore) + (File.Weight_Rating * ratingScore) +
-		(File.Weight_UserRating * ratingScore * userRatingScore) + (File.Weight_UserWeight * normalizedWeight)
+	return (Type.Weight_Price * priceScore) + (Type.Weight_Rating * ratingScore) +
+		(Type.Weight_UserRating * ratingScore * userRatingScore) + (Type.Weight_UserWeight * normalizedWeight)
 }
 
-func convertAddress(store File.NearByResult) string {
+func convertAddress(store Type.NearByResult) string {
 	var sb strings.Builder
 	area := store.PlusCode.CompoundCode
 	compoundCodeSplit := strings.Split(area, " ")
@@ -215,4 +217,18 @@ func convertAddress(store File.NearByResult) string {
 	sb.WriteString(store.Vicinity)
 
 	return sb.String()
+}
+
+func ReadKey(filePath string, error string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() {
+		return scanner.Text(), nil
+	}
+	return "", errors.New(error)
 }

@@ -1,4 +1,4 @@
-package File
+package Type
 
 type Location struct {
 	Latitude  float64 `json:"lat"`
