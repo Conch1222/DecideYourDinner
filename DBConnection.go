@@ -3,17 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"sync"
 )
 
-const (
-	USERNAME = "admin"
-	PASSWORD = "admin"
-	NETWORK  = "tcp"
-	SERVER   = "127.0.0.1"
-	PORT     = 3306
-	DATABASE = "web"
-)
+const NETWORK = "tcp"
 
 type DBConnection struct {
 	db *sql.DB
@@ -32,8 +26,14 @@ func connectDB() *DBConnection {
 
 func initDB() *DBConnection {
 	if DBConn == nil {
-		fmt.Println("Connecting to " + DATABASE)
-		conn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", USERNAME, PASSWORD, NETWORK, SERVER, PORT, DATABASE)
+		username := os.Getenv("DB_USER")
+		password := os.Getenv("DB_PASSWORD")
+		server := os.Getenv("DB_HOST")
+		port := os.Getenv("DB_PORT")
+		database := os.Getenv("DB_NAME")
+
+		fmt.Println("Connecting to " + database)
+		conn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s", username, password, NETWORK, server, port, database)
 		db, err := sql.Open("mysql", conn)
 		if err != nil {
 			fmt.Println("Open Mysql error: ", err)
