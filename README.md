@@ -1,5 +1,11 @@
 # DecideYourDinner
 
+This project will help you decide what you want to eat for dinner today based on your inputs and your location.
+
+## Usage
+
+[Link](https://drive.google.com/file/d/1YLZE-OIB5QN8LX_CDQnP9RaMAdXSlU2c/view?usp=sharing)
+
 ## Setup
 
 - need to create Key.txt in the File folder and put the [gcp api key](https://cloud.google.com/api-keys/docs/overview) in it
