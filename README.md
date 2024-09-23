@@ -2,15 +2,15 @@
 
 ## Setup
 
-- you need to create Key.txt in the File folder and put the [gcp api key](https://cloud.google.com/api-keys/docs/overview) in it
+- need to create Key.txt in the File folder and put the [gcp api key](https://cloud.google.com/api-keys/docs/overview) in it
 
-**Run the command in the root project directory**
-
-- To deploy the project on Docker
+- deploy the project on Docker
 
 ```
 docker-compose up --build
 ```
+**NOTE: Run all Docker commands in the root project directory**
+
 ### Default Account
 
 - username: admin
