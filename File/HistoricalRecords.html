@@ -25,9 +25,6 @@
             background-color: #f2f2f2;
             color: #EAC100;
         }
-        .small-text {
-            font-size: 10px;
-        }
     </style>
 </head>
 <body>
@@ -54,7 +51,7 @@
             <td>{{.StoreName}}</td>
             <td>{{.StoreAddress}}</td>
             <td>{{.StoreRating}}</td>
-            <td class="small-text"><a href="{{ .StoreMapLink}}" target="_blank"> External Link </a> </td>
+            <td><a href="{{ .StoreMapLink}}" target="_blank"> External Link </a> </td>
         </tr>
         {{end}}
         </tbody>
