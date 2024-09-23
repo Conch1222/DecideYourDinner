@@ -8,13 +8,18 @@ This project will help you decide what you want to eat for dinner today based on
 
 ## Setup
 
-- need to create Key.txt in the File folder and put the [gcp api key](https://cloud.google.com/api-keys/docs/overview) in it
+1. create a [GCP API Key](https://cloud.google.com/api-keys/docs/overview) and enable [Places API](https://developers.google.com/maps/documentation/places/web-service?hl=zh-tw) and [Geolocation API](https://developers.google.com/maps/documentation/geocoding/overview)
 
-- deploy the project on Docker
+2. create Key.txt in the **File** folder and put the api key in it
+
+3. deploy the project on Docker
 
 ```
 docker-compose up --build
 ```
+
+4. Once done, enter `http://localhost:8080/login` into the webpage to decide your dinner
+
 **NOTE: Run all Docker commands in the root project directory**
 
 ### Default Account

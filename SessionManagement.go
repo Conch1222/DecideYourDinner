@@ -10,13 +10,14 @@ import (
 
 var CookieStore *sessions.CookieStore
 
-func setKeyAndSetCookieStore() {
+func setKeyAndSetCookieStore() error {
 	key, err := ReadKey("File/SessionKey.txt", Error.InvalidSessionKey)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	CookieStore = sessions.NewCookieStore([]byte(key))
 	CookieStore.MaxAge(600)
+	return nil
 }
 
 func authMiddleware(nextPage http.HandlerFunc) http.HandlerFunc {

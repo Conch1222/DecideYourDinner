@@ -6,7 +6,11 @@ import (
 
 func main() {
 
-	setKeyAndSetCookieStore()
+	err := setKeyAndSetCookieStore()
+	if err != nil {
+		panic(err)
+	}
+
 	setHTTPRouter()
 
 }

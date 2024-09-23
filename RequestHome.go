@@ -143,7 +143,7 @@ func validateResultStatus(resultsNearBy []*Type.NearBy) error {
 		}
 
 		if result.Status != Type.STATUS_OK && result.Status != Type.STATUS_ZERO_RESULTS {
-			return errors.New(Error.OutputError_RequestError)
+			return errors.New(Error.OutputError_RequestError + result.Status)
 		}
 	}
 

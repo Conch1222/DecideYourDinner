@@ -122,7 +122,13 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Println(optionMap)
 
-		client := getClient()
+		client, err := getClient()
+		if err != nil {
+			fmt.Println(err)
+			fmt.Fprintf(w, err.Error())
+			return
+		}
+
 		loc, err := client.getUserLocation(w)
 		if err != nil {
 			fmt.Println(err)

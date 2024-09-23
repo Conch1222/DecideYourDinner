@@ -23,21 +23,28 @@ type GMapClient struct {
 var GClient *GMapClient
 var onceGClient sync.Once
 
-func getClient() *GMapClient {
+func getClient() (*GMapClient, error) {
 	// singleton
+	error := error(nil)
 	onceGClient.Do(func() {
 		fmt.Println("once Init Cli")
-		client, _ := initClient()
+		client, err := initClient()
+		if err != nil {
+			error = err
+		}
 		GClient = client
 	})
-	return GClient
+	if error != nil {
+		return nil, error
+	}
+	return GClient, nil
 }
 
 func initClient() (*GMapClient, error) {
 	key, err := ReadKey("File/Key.txt", Error.InvalidApiKey)
 	if err != nil {
-		fmt.Println("panic")
-		panic(err)
+		fmt.Println(Error.InvalidApiKey)
+		return nil, err
 	}
 
 	if GClient == nil {
