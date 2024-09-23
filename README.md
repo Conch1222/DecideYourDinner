@@ -1,5 +1,9 @@
 # DecideYourDinner
 
+## Setup
+
+- you need to create Key.txt in the File folder and put the [gcp api key](https://cloud.google.com/api-keys/docs/overview) in it
+
 **Run the command in the root project directory**
 
 - To deploy the project on Docker
@@ -7,6 +11,12 @@
 ```
 docker-compose up --build
 ```
+### Default Account
+
+- username: admin
+- password: admin
+
+## Test
 
 - To manually enter the Docker commands to build and run
 
